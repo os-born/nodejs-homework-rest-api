@@ -1,12 +1,16 @@
-const express = require('express')
-const {NotFound, BadRequest, Conflict} = require("http-errors")
+const express = require('express');
 const router = express.Router();
+const { BadRequest, Conflict, Unauthorized } = require("http-errors");
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const {
     User,
-    joiUserSignupSchema
-} = require('../../models/user')
+    joiUserSignupSchema,
+    joiUserLoginSchema
+} = require('../../models');
 
+const { SECRET_KEY } = process.env;
 
 router.post('/signup', async (req, res, next) => {
     try {
@@ -14,12 +18,14 @@ router.post('/signup', async (req, res, next) => {
         if ( error ) {
             throw new BadRequest(error.message)
         }
-        const { email } = req.body;
+        const { email, password } = req.body;
         const user = await User.findOne({ email });
         if ( user ) {
-            throw new Conflict("Email in use");
+            throw new Conflict("Email in use!");
         }
-        await User.create(req.body);
+        const salt = await bcrypt.genSalt(10);
+        const hashPassword = await bcrypt.hash(password, salt)
+        await User.create({...req.body, password: hashPassword});
         res.status(201).json({
             "user": {
             "email": email,
@@ -32,122 +38,38 @@ router.post('/signup', async (req, res, next) => {
     }
 })
 
-// const { name, email, phone } = req.body;
-//     const newContact = { name, email, phone }
-//     try { await joiContactAddSchema.validateAsync(newContact)
-//         const newBody = await Contact.create(newContact)
-//         res.status(201).json({
-//             message: `New contact with name: ${newBody.name} successfully created!`,
-//             data: newBody
-//         })
-//     } catch (error) {
-//         if (error.message.includes("is required")) {
-//             error.status = 400
-//             error.message = "missing required fields!"
-//         }
-        // 
-//         if (error.message.includes("Cast to ObjectId failed")) {
-//             error.status = 404
-//         }
-        // 
-//         next(error)
-//     }
+router.post('/login', async (req, res, next) => {
+    try {
+        const { error } = joiUserLoginSchema.validate(req.body)
+        if ( error ) {
+            throw new BadRequest(error.message)
+        }
+        const { email, password } = req.body;
+        const user = await User.findOne({ email });
+        if ( !user ) {
+            throw new Unauthorized("Email or password is wrong!");
+        }
+        const passwordCompare = await bcrypt.compare(password, user.password);
+        if (!passwordCompare) {
+            throw new Unauthorized("Email or password is wrong!");
+        }
+        const payload = {
+            id: user._id
+        };
+        const token = jwt.sign(payload, SECRET_KEY);
+        
+        res.status(200).json(
+            {
+            "token": token,
+            "user": {
+                "email": email,
+                "subscription": "starter"
+                }
+            }
+        )
+    } catch (error) {
+        next(error)
+    }
+})
 
-// router.get('/', async (req, res, next) => {
-//   res.status(200).json(await Contact.find())
-// })
-
-// router.get('/:id', async (req, res, next) => {
-//   const { id } = req.params;
-//   try {
-//     const contact = await Contact.findById(id);
-//     if (!contact) {
-//       throw NotFound(`Contact with ID: ${id} not found!`)
-//     }
-//     res.status(200).json(contact)
-//   } catch (error) {
-//     if (error.message.includes("Cast to ObjectId failed")) {
-//       error.status = 404
-//     }
-//     next(error)
-//   }
-//   
-// })
-// router.delete('/:id', async (req, res, next) => {
-//   const { id } = req.params;
-//   try {
-//     const contact = await Contact.findByIdAndRemove(id);
-//     if (!contact) {
-//       throw NotFound(`Contact with ID: ${id} not found!`)
-//     }
-//     res.status(200).json({
-//       message: `Contact with ID: ${ id } successfully deleted!`,
-//     })
-//   } catch (error) {
-//     if (error.message.includes("Cast to ObjectId failed")) {
-//       error.status = 404
-//     }
-//     next(error)
-//   }
-// })
-
-// router.patch('/:id', async (req, res, next) => {
-//   const { id } = req.params;
-//   
-//   try {
-//     const { error } = await joiContactUpdateSchema.validateAsync(req.body)
-//     if (error) {
-//       throw new BadRequest(error.message);
-//     }
-//     const updateStatusContact = await Contact.findByIdAndUpdate(id, req.body, {new: true})
-//     if (!updateStatusContact) {
-//       throw NotFound(`Contact with ID: ${id} not found!`)
-//     }
-//     res.status(200).json({
-//       message: `Contact with ID: ${ id } successfully updated!`,
-//       data: updateStatusContact
-//     })
-//   } catch (error) {
-//     if (error.message.includes("is required")) {
-//       error.status = 400
-//       error.message = "missing required fields!"
-//     }
-
-//     if (error.message.includes("Cast to ObjectId failed")) {
-//       error.status = 404
-//     }
-
-//     next(error)
-//   }
-// })
-
-// router.patch('/:id/favorite', async (req, res, next) => {
-//   try {
-//     const { error } = await joiContactUpdateIsFavoriteSchema.validateAsync(req.body)
-//     if (error) {
-//       throw new BadRequest(error.message);
-//     }
-//     const { id } = req.params;
-//     const { favorite } = req.body
-
-//     const updatedFavoriteContact = await Contact.findByIdAndUpdate(id, { favorite }, { new: true });
-//     if (!updatedFavoriteContact) {
-//       throw NotFound();
-//     }
-//     res.json({message: `Contact with ID: ${ id } successfully updated!`,
-//       data: updatedFavoriteContact})
-//   } catch (error) {
-//     if (error.message.includes("is required")) {
-//       error.status = 400
-//       error.message = "missing field favorite!"
-//     }
-
-//     if (error.message.includes("Cast to ObjectId failed")) {
-//       error.status = 404
-//     }
-
-//     next(error)
-//   }
-// })
-
-module.exports = router
+module.exports = router;
