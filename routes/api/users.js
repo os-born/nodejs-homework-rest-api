@@ -43,7 +43,7 @@ router.post('/login', async (req, res, next) => {
     try {
         const { error } = joiUserLoginSchema.validate(req.body)
         if ( error ) {
-            throw new BadRequest(error.message)
+            throw new BadRequest(error.message);
         }
         const { email, password } = req.body;
         const user = await User.findOne({ email });
