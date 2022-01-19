@@ -3,6 +3,7 @@ const router = express.Router();
 const { BadRequest, Conflict, Unauthorized } = require("http-errors");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { authenticate } = require('../../middlewares');
 
 const {
     User,
@@ -57,7 +58,7 @@ router.post('/login', async (req, res, next) => {
             id: user._id
         };
         const token = jwt.sign(payload, SECRET_KEY);
-        
+        await User.findByIdAndUpdate(user._id, { token });
         res.status(200).json(
             {
             "token": token,
@@ -67,6 +68,28 @@ router.post('/login', async (req, res, next) => {
                 }
             }
         )
+    } catch (error) {
+        next(error)
+    }
+})
+
+router.get('/logout', authenticate, async (req, res, next) => {
+    try {
+        await User.findByIdAndUpdate(req.user._id, { token: null });
+        res.status(204).send();
+    } catch (error) {
+        next(error)
+    }
+})
+
+router.get('/current', authenticate, async (req, res, next) => {
+    try {
+        const { email } = req.user;
+        res.status(200).json({
+        "email": email,
+        "subscription": "starter"
+        })
+
     } catch (error) {
         next(error)
     }

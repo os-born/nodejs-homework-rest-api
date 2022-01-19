@@ -11,13 +11,13 @@ const {
   joiContactUpdateIsFavoriteSchema
 } = require('../../models');
 
-router.get('/', ctrlWrapper(ctrl.getAllContacts));
+router.get('/', authenticate, ctrlWrapper(ctrl.getAllContacts));
 
 router.get('/:id', ctrlWrapper(ctrl.getContactById));
 
 router.post('/', authenticate, validation(joiContactAddSchema), ctrlWrapper(ctrl.addContact));
 
-router.patch('/:id', validation(joiContactUpdateSchema), ctrlWrapper(ctrl.updateContactById));
+router.patch('/:id', authenticate, validation(joiContactUpdateSchema), ctrlWrapper(ctrl.updateContactById));
 
 router.patch('/:id/favorite', validation(joiContactUpdateIsFavoriteSchema), ctrlWrapper(ctrl.updateFavoriteContact));
 
