@@ -24,13 +24,18 @@ const userSchema = Schema({
   },
   token: {
     type: String,
-    default: null,
+    default: null
   },
+  avatarURL: {
+    type: String,
+    default: ""
+  }
 }, { versionKey: false, timestamps: true });
 
 const joiUserSignupSchema = Joi.object({
     email: Joi.string().pattern(regexpEmail).required(),
-    password: Joi.string().min(6).required()
+    password: Joi.string().min(6).required(),
+    avatarURL: Joi.string()
 })
 
 const joiUserLoginSchema = Joi.object({
