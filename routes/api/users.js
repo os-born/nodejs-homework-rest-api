@@ -1,21 +1,25 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { authenticate } = require('../../middlewares');
-const { validation } = require('../../middlewares');
-const { ctrlWrapper } = require('../../middlewares');
-const ctrl = require('../../controllers/users');
 
 const {
-    joiUserSignupSchema,
-    joiUserLoginSchema
-} = require('../../models');
+  ctrlWrapper,
+  authenticate,
+  validation,
+  upload,
+  avatarNormalizer,
+} = require("../../middlewares");
+const { users: ctrl } = require("../../controllers");
 
-router.post('/signup', validation(joiUserSignupSchema), ctrlWrapper(ctrl.signup));
+const { joiUserSignupSchema, joiUserLoginSchema } = require("../../models");
 
-router.post('/login', validation(joiUserLoginSchema), ctrlWrapper(ctrl.login));
+router.post("/signup", upload.single("avatar"), validation(joiUserSignupSchema), ctrlWrapper(ctrl.signup));
 
-router.get('/logout', authenticate, ctrlWrapper(ctrl.logout));
+router.post("/login", validation(joiUserLoginSchema), ctrlWrapper(ctrl.login));
 
-router.get('/current', authenticate, ctrlWrapper(ctrl.getCurrent));
+router.get("/logout", authenticate, ctrlWrapper(ctrl.logout));
+
+router.get("/current", authenticate, ctrlWrapper(ctrl.getCurrent));
+
+router.patch("/avatars", authenticate, upload.single("avatar"), avatarNormalizer, ctrlWrapper(ctrl.setAvatar));
 
 module.exports = router;
