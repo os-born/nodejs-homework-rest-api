@@ -15,6 +15,8 @@ CLI app Homework GoIT Academy.
 
 @ GET /api/users/current - получение текущего пользователя;
 
+@ PATCH /api/users/avatars - изменение dafault avatar пользователем на свой личный;
+
 @ GET /api/contacts - получение всех контактов текущего пользователя;
 
 @ GET /api/contacts/:id - получение контакта текущего пользователя по ID;
