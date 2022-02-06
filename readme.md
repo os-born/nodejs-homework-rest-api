@@ -17,6 +17,10 @@ CLI app Homework GoIT Academy.
 
 @ PATCH /api/users/avatars - изменение dafault avatar пользователем на свой личный;
 
+@ GET /api/users/verify/:verificationToken - верификация email пользователя;
+
+@ POST /api/users/verify - повторная отправка письма для верификации пользователя;
+
 @ GET /api/contacts - получение всех контактов текущего пользователя;
 
 @ GET /api/contacts/:id - получение контакта текущего пользователя по ID;

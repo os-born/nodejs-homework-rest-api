@@ -10,7 +10,7 @@ const {
 } = require("../../middlewares");
 const { users: ctrl } = require("../../controllers");
 
-const { joiUserSignupSchema, joiUserLoginSchema } = require("../../models");
+const { joiUserSignupSchema, joiUserLoginSchema, joiUserVerifySchema } = require("../../models");
 
 router.post("/signup", upload.single("avatar"), validation(joiUserSignupSchema), ctrlWrapper(ctrl.signup));
 
@@ -21,5 +21,9 @@ router.get("/logout", authenticate, ctrlWrapper(ctrl.logout));
 router.get("/current", authenticate, ctrlWrapper(ctrl.getCurrent));
 
 router.patch("/avatars", authenticate, upload.single("avatar"), avatarNormalizer, ctrlWrapper(ctrl.setAvatar));
+
+router.get("/verify/:verificationToken", ctrlWrapper(ctrl.getVerification));
+
+router.post("/verify", validation(joiUserVerifySchema), ctrlWrapper(ctrl.setVerification));
 
 module.exports = router;

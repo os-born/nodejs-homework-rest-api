@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 
 const {contacts: ctrl} = require('../../controllers');
-const { ctrlWrapper } = require('../../middlewares');
-const { validation } = require('../../middlewares');
-const { authenticate } = require('../../middlewares');
+const {
+  ctrlWrapper,
+  validation,
+  authenticate
+} = require('../../middlewares');
 const {
   joiContactAddSchema,
   joiContactUpdateSchema,
